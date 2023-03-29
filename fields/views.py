@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from .models import *
 from .serializers import *
-
+from rest_framework.generics import CreateAPIView,UpdateAPIView,DestroyAPIView,RetrieveAPIView,ListAPIView
 # City
 # list all cities
 
@@ -24,97 +24,58 @@ def addCity(request):
     return Response(serializer.data)
 
 ##############################################################
-# Terrains
-# list all terrains
+# Fields
 
 
-@api_view(['GET'])
-def getTerrains(request):
-    Terrains = Terrain.objects.all()
-    serializer = TerrainSerializer(Terrains, many=True)
-    return Response(serializer.data)
+# list all fields
+class FieldListAPIView(ListAPIView):
+    queryset = Field.objects.all()
+    serializer_class = FieldSerializer
 
+# add field
+class FieldCreateAPIView(CreateAPIView):
+    queryset = Field.objects.all()
+    serializer_class = FieldSerializer
 
-# add terrain
-@api_view(['POST'])
-def addTerrain(request):
-    serializer = TerrainSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=201)
-    return Response(serializer.errors, status=400)
+# update field
+class FieldUpdateAPIView(UpdateAPIView):
+    queryset = Field.objects.all()
+    serializer_class = FieldSerializer
 
+# delete field
+class FieldDestroyAPIView(DestroyAPIView):
+    queryset = Field.objects.all()
+    serializer_class = FieldSerializer
 
-# delete terrain
-@api_view(['DELETE'])
-def deleteTerrain(request, terrain_id):
-    try:
-        terrain = Terrain.objects.get(pk=terrain_id)
-    except Terrain.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    terrain.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-# update terrain
-@api_view(['PUT'])
-def updateTerrain(request, pk):
-    try:
-        terrain = Terrain.objects.get(pk=pk)
-    except Terrain.DoesNotExist:
-        return Response(status=404)
-
-    serializer = TerrainSerializer(terrain, data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data)
-    return Response(serializer.errors, status=400)
-
+# retrieve field
+class FieldRetrieveAPIView(RetrieveAPIView):
+    queryset = Field.objects.all()
+    serializer_class = FieldSerializer
 ##################################################################
 
 # type
 # list all types
+class TypeListAPIView(ListAPIView):
+    queryset = Type.objects.all()
+    serializer_class = TypeSerializer
 
+# add Type
+class TypeCreateAPIView(CreateAPIView):
+    queryset = Type.objects.all()
+    serializer_class = TypeSerializer
 
-@api_view(['GET'])
-def getTypes(request):
-    types = Type.objects.all()
-    serializer = TypeSerializer(types, many=True)
-    return Response(serializer.data)
+# update Type
+class TypeUpdateAPIView(UpdateAPIView):
+    queryset = Type.objects.all()
+    serializer_class = TypeSerializer
 
+# delete Type
+class TypeDestroyAPIView(DestroyAPIView):
+    queryset = Type.objects.all()
+    serializer_class = TypeSerializer
 
-# add type
-@api_view(['POST'])
-def addType(request):
-    serializer = TypeSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-    return Response(serializer.data)
-
-
-# delete type
-@api_view(['DELETE'])
-def deleteType(request, type_id):
-    try:
-        type = Type.objects.get(pk=type_id)
-    except Type.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    type.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-# update type
-@api_view(['PUT'])
-def updateType(request, pk):
-    try:
-        type = Type.objects.get(pk=pk)
-    except Type.DoesNotExist:
-        return Response(status=404)
-
-    serializer = TypeSerializer(type, data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data)
-    return Response(serializer.errors, status=400)
+# retrieve Type
+class TypeRetrieveAPIView(RetrieveAPIView):
+    queryset = Type.objects.all()
+    serializer_class = TypeSerializer
+##################################################################

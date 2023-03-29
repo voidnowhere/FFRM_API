@@ -4,12 +4,15 @@ from . import views
 urlpatterns = [
     path('cities/all/', views.getCities),
     path('cities/add/', views.addCity),
-    path('terrains/all/', views.getTerrains),
-    path('terrains/add/', views.addTerrain),
-    path('terrains/delete/<int:terrain_id>/', views.deleteTerrain),
-    path('terrains/update/<int:pk>/', views.updateTerrain),
-    path('types/all/', views.getTypes),
-    path('types/add/', views.addType),
-    path('types/delete/<int:type_id>/', views.deleteType),
-    path('types/update/<int:pk>/', views.updateType)
+    path('', views.FieldListAPIView.as_view()),
+    path('create/', views.FieldCreateAPIView.as_view()),
+    path('update/<int:pk>/', views.FieldUpdateAPIView.as_view()),
+    path('delete/<int:pk>/', views.FieldDestroyAPIView.as_view()),
+    path('get/<int:pk>/', views.FieldRetrieveAPIView.as_view()),
+    path('types/', views.TypeListAPIView.as_view()),
+    path('types/create/', views.TypeCreateAPIView.as_view()),
+    path('types/update/<int:pk>/', views.TypeUpdateAPIView.as_view()),
+    path('types/delete/<int:pk>/', views.TypeDestroyAPIView.as_view()),
+    path('types/get/<int:pk>/', views.TypeRetrieveAPIView.as_view()),
+    
 ]

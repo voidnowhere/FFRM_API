@@ -2,9 +2,9 @@ from rest_framework import serializers
 from .models import *
 
 
-class TerrainSerializer(serializers.ModelSerializer):
+class FieldSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Terrain
+        model = Field
         fields = '__all__'
         read_only_fields = ('id',)
 
