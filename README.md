@@ -41,6 +41,14 @@ Set-ExecutionPolicy AllSigned
 ```bash
 pip install -r requirements.txt
 ```
+### Create `.env` file using `Command Prompt` and fill it
+```bash
+copy .env.example .env
+```
+### Generate django `SECRET_KEY`
+```bash
+python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
+```
 ### Make `migrations`
 ```bash
 python manage.py makemigrations
