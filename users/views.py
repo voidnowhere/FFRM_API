@@ -5,17 +5,17 @@ from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from .serializers import PasswordSerializer, PlayerSerializer
+from .serializers import PasswordSerializer, UserSerializer, RegisterSerializer
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
-    serializer = PlayerSerializer(data=request.data)
+    serializer = RegisterSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     serializer.save()
-    return Response({'message': 'User created successfully'}, status=status.HTTP_201_CREATED)
+    return Response({'message': 'Account created successfully'}, status=status.HTTP_201_CREATED)
 
 
 @api_view(['PATCH'])
@@ -36,7 +36,7 @@ def update_password(request):
 
 class Profile(RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = PlayerSerializer
+    serializer_class = UserSerializer
 
     def get_object(self):
         return self.request.user
