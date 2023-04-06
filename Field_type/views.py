@@ -9,12 +9,12 @@ from .serializer import *
 
 # Create your views here.
 
-class FootBallFieldTypeView(ListCreateAPIView):
+class FootBallFieldTypeListCreate(ListCreateAPIView):
     queryset = FootBallFieldType.objects.all()
     serializer_class = FootBallFieldTypeSerializer
 
 
-class FootBallFieldTypeView2(RetrieveUpdateDestroyAPIView):
+class FootBallFieldTypeRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
     serializer_class = FootBallFieldTypeSerializer
     lookup_url_kwarg = 'id'
     queryset = FootBallFieldType.objects.all()
