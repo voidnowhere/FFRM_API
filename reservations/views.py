@@ -8,18 +8,18 @@ from .serializers import *
 
 
 class ListCreateReservations(ListCreateAPIView):
-    queryset = Reservations.objects.all()
+    queryset = Reservation.objects.all()
     serializer_class = ReservationSerializer
 
     def create(self, request, *args, **kwargs):
-        # get the field and beginHour from the request data
+        # get the field and begin_date_time from the request data
         field_id = request.data.get('field')
-        begin_hour = request.data.get('beginHour')
-        end_hour = request.data.get('endHour')
+        begin_hour = request.data.get('begin_date_time')
+        end_hour = request.data.get('end_date_time')
 
         # check if there is a reservation with the same field and time range
-        existing_reservations = Reservations.objects.filter(
-            field=field_id, beginHour__lte=end_hour, endHour__gte=begin_hour
+        existing_reservations = Reservation.objects.filter(
+            field=field_id, begin_date_time__lte=end_hour, end_date_time__gte=begin_hour
         )
         if existing_reservations.exists():
             return Response(
@@ -35,8 +35,8 @@ class ListCreateReservations(ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class ReservationsUpdate(RetrieveUpdateDestroyAPIView):
-    queryset = Reservations.objects.all()
+class ReservationRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
+    queryset = Reservation.objects.all()
     serializer_class = ReservationSerializer
     lookup_field = 'id'
 
@@ -45,9 +45,9 @@ class ReservationsUpdate(RetrieveUpdateDestroyAPIView):
 
         # check if the updated reservation conflicts with an existing reservation
         field_id = request.data.get('field') or instance.field_id
-        begin_hour = request.data.get('beginHour') or instance.beginHour
-        end_hour = request.data.get('endHour') or instance.endHour
-        existing_reservation = Reservations.objects.exclude(id=instance.id).filter(field=field_id, beginHour__lte=end_hour, endHour__gte=begin_hour).first()
+        begin_hour = request.data.get('begin_date_time') or instance.begin_date_time
+        end_hour = request.data.get('end_date_time') or instance.end_date_time
+        existing_reservation = Reservation.objects.exclude(id=instance.id).filter(field=field_id, begin_date_time__lte=end_hour, end_date_time__gte=begin_hour).first()
         if existing_reservation:
             return Response({'error': 'A reservation already exists for this field and time.'},
                             status=status.HTTP_400_BAD_REQUEST)

@@ -5,5 +5,5 @@ from .models import *
 
 class ReservationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Reservations
-        fields = '__all__'
+        model = Reservation
+        fields = ['id', 'field', 'begin_date_time', 'end_date_time', 'isPaid', 'player']
