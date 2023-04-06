@@ -58,3 +58,11 @@ class ReservationsUpdate(RetrieveUpdateDestroyAPIView):
         self.perform_update(serializer)
         return Response(serializer.data)
 
+    def destroy(self, request, *args, **kwargs):
+        reservation = self.get_object()
+        if reservation.isPaid:
+            return Response({'error': 'Paid reservations cannot be deleted.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        self.perform_destroy(reservation)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
