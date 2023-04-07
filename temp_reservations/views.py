@@ -1,6 +1,7 @@
 from datetime import datetime
 
-from django.db import models
+from django.db.models import F, Count, Q, Exists, OuterRef, DateField, TimeField
+from django.db.models.functions import Cast
 from pytz import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -21,22 +22,28 @@ class AvailableReservations(ListAPIView):
     def get_queryset(self):
         user = self.request.user
         return Reservation.objects.prefetch_related('field', 'field__type').annotate(
-            available_places=models.F('field__type__max') - models.Count('players', filter=~models.Q(players=user)),
-            is_joined=models.Exists(
-                Reservation.objects.filter(pk=models.OuterRef('id'), players=user)
-            )
+            available_places_excluding_owner=(
+                    F('field__type__max') - Count('players', filter=~Q(players=user))
+            ),
+            available_places=F('field__type__max') - Count('players'),
+            is_joined=Exists(
+                Reservation.objects.filter(pk=OuterRef('id'), players=user)
+            ),
+            date=Cast('begin_date_time', output_field=DateField()),
+            begin_time=Cast('begin_date_time', output_field=TimeField()),
+            end_time=Cast('end_date_time', output_field=TimeField()),
         ).filter(
             is_public=True,
             begin_date_time__gt=datetime.now(timezone(TIME_ZONE)),
-            available_places__gt=0,
-        )
+            available_places_excluding_owner__gt=0,
+        ).order_by('begin_date_time')
 
 
 @api_view(['PATCH'])
 @permission_classes([IsPlayer])
 def join_reservation(request, pk):
     reservation = Reservation.objects.annotate(
-        available_places=models.F('field__type__max') - models.Count('players')
+        available_places=F('field__type__max') - Count('players')
     ).filter(pk=pk).first()
     if reservation is None:
         raise NotFound

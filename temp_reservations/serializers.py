@@ -19,9 +19,12 @@ class AvailableFootBallFieldSerializer(serializers.ModelSerializer):
 
 class AvailableReservationsSerializer(serializers.ModelSerializer):
     field = AvailableFootBallFieldSerializer()
+    date = serializers.DateField()
+    begin_time = serializers.TimeField()
+    end_time = serializers.TimeField()
     available_places = serializers.IntegerField()
     is_joined = serializers.BooleanField()
 
     class Meta:
         model = Reservation
-        fields = ('id', 'begin_date_time', 'end_date_dime', 'field', 'available_places', 'is_joined')
+        fields = ('id', 'date', 'begin_time', 'end_time', 'field', 'available_places', 'is_joined',)
