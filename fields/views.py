@@ -8,20 +8,11 @@ from rest_framework.generics import CreateAPIView,UpdateAPIView,DestroyAPIView,R
 # list all cities
 
 
-@api_view(['GET'])
-def getCities(request):
-    cities = City.objects.all()
-    serializer = CitySerializer(cities, many=True)
-    return Response(serializer.data)
 
-
-# add city
-@api_view(['POST'])
-def addCity(request):
-    serializer = CitySerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-    return Response(serializer.data)
+# list all the zones
+class ZoneListAPIView(ListAPIView):
+    queryset = Zone.objects.all()
+    serializer_class = ZoneSerializer
 
 ##############################################################
 # Fields
