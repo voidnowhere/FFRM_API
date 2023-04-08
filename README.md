@@ -24,11 +24,11 @@ cd FFRM_API
 python -m venv venv
 ```
 ### Activate it
-- `Command Prompt`
+- `Windows`
 ```bash
-venv\Scripts\activate.bat
+venv\Scripts\activate
 ```
-- `Linux` or `PowerShell`
+- `Linux`
 ```bash
 source venv/Scripts/activate
 ```
