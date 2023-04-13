@@ -9,5 +9,4 @@ class FootBallField(models.Model):
 class FootBallFieldType(models.Model):
     name = models.CharField(max_length=10)
     max = models.IntegerField()
-    price = models.FloatField()
-    advance = models.FloatField()
+    priceHour = models.FloatField()
