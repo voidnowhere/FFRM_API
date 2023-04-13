@@ -3,70 +3,47 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from .models import *
 from .serializers import *
-from rest_framework.generics import CreateAPIView,UpdateAPIView,DestroyAPIView,RetrieveAPIView,ListAPIView
-# City
-# list all cities
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 
-
-
-# list all the zones
-class ZoneListAPIView(ListAPIView):
+class ZoneListCreateAPIView(ListCreateAPIView):
     queryset = Zone.objects.all()
     serializer_class = ZoneSerializer
 
-##############################################################
-# Fields
+    
+class ZoneByCityAPIView(ListCreateAPIView):
+    serializer_class = ZoneSerializer
+
+    def get_queryset(self):
+        city_id = self.kwargs['city_id']
+        return Zone.objects.filter(city_id=city_id)
+
+class FieldTypeListCreateAPIView(ListCreateAPIView):
+    queryset = FieldType.objects.all()
+    serializer_class = FieldTypeSerializer
+
+class FieldListCreateAPIView(ListCreateAPIView):
+    serializer_class = FieldSerializer
+    queryset = Field.objects.all()
+    # def get_queryset(self):
+        # print(self.kwargs['zone_id'])
+        # return Field.objects.filter(zone__id=self.kwargs['zone_id'])
 
 
-# list all fields
-class FieldListAPIView(ListAPIView):
+class FieldRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Field.objects.all()
     serializer_class = FieldSerializer
 
-# add field
-class FieldCreateAPIView(CreateAPIView):
-    queryset = Field.objects.all()
-    serializer_class = FieldSerializer
 
-# update field
-class FieldUpdateAPIView(UpdateAPIView):
-    queryset = Field.objects.all()
-    serializer_class = FieldSerializer
 
-# delete field
-class FieldDestroyAPIView(DestroyAPIView):
-    queryset = Field.objects.all()
-    serializer_class = FieldSerializer
+class CityListView(ListCreateAPIView):
+    queryset = City.objects.all()
+    serializer_class = CitySerializer
 
-# retrieve field
-class FieldRetrieveAPIView(RetrieveAPIView):
-    queryset = Field.objects.all()
-    serializer_class = FieldSerializer
-##################################################################
 
-# type
-# list all types
-class TypeListAPIView(ListAPIView):
-    queryset = Type.objects.all()
-    serializer_class = TypeSerializer
+class CityByZoneAPIView(RetrieveUpdateDestroyAPIView):
+    serializer_class = CitySerializer
+    queryset = City.objects.all()
 
-# add Type
-class TypeCreateAPIView(CreateAPIView):
-    queryset = Type.objects.all()
-    serializer_class = TypeSerializer
-
-# update Type
-class TypeUpdateAPIView(UpdateAPIView):
-    queryset = Type.objects.all()
-    serializer_class = TypeSerializer
-
-# delete Type
-class TypeDestroyAPIView(DestroyAPIView):
-    queryset = Type.objects.all()
-    serializer_class = TypeSerializer
-
-# retrieve Type
-class TypeRetrieveAPIView(RetrieveAPIView):
-    queryset = Type.objects.all()
-    serializer_class = TypeSerializer
-##################################################################
+    def get_object(self):
+        zone_id = self.kwargs['pk']
+        return City.objects.get(zone__id=zone_id)

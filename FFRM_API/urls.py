@@ -23,5 +23,6 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/blacklist/', TokenBlacklistView.as_view(), name='token_blacklist'),
     path('api/users/', include('users.urls')),
-    path('api/fields/', include('fields.urls'))
+    path('api/fields/', include('fields.urls')),
+
 ]
