@@ -4,7 +4,7 @@ from . import views
 from .views import ListCreateReservations, ReservationRetrieveUpdateDestroy
 
 urlpatterns = [
-    path('reservations/', ListCreateReservations.as_view()),
-    path('reservations/<int:id>', ReservationRetrieveUpdateDestroy.as_view()),
+    path('', ListCreateReservations.as_view()),
+    path('<int:id>/', ReservationRetrieveUpdateDestroy.as_view()),
 
 ]
