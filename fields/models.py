@@ -27,7 +27,8 @@ class Field(models.Model):
                   ('naturelle', 'Naturelle'))
     soil_type = models.CharField(max_length=20, choices=SOIL_TYPES)
     zone = models.ForeignKey(Zone, on_delete=models.PROTECT)
-
+    image = models.ImageField(upload_to='football-fields')
+    
     def __str__(self):
         return self.name
 
