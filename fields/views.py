@@ -3,14 +3,14 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from .models import *
 from .serializers import *
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView,ListAPIView
 
-class ZoneListCreateAPIView(ListCreateAPIView):
+class ZoneListAPIView(ListAPIView):
     queryset = Zone.objects.all()
     serializer_class = ZoneSerializer
 
     
-class ZoneByCityAPIView(ListCreateAPIView):
+class ZoneByCityListAPIView(ListAPIView):
     serializer_class = ZoneSerializer
 
     def get_queryset(self):

@@ -8,8 +8,8 @@ urlpatterns = [
     path('delete/<int:pk>/', views.FieldRetrieveUpdateDestroyAPIView.as_view()),
     path('<int:pk>/', views.FieldRetrieveUpdateDestroyAPIView.as_view()),
     path('fieldtypes/', views.FieldTypeListCreateAPIView.as_view()),
-    path('zones/', views.ZoneListCreateAPIView.as_view()),
-    path('zones/city=<int:city_id>/', views.ZoneByCityAPIView.as_view()),
+    path('zones/', views.ZoneListAPIView.as_view()),
+    path('zones/city=<int:city_id>/', views.ZoneByCityListAPIView.as_view()),
     path('cities/', views.CityListView.as_view()),
     path('zones/<int:pk>/city/', views.CityByZoneAPIView.as_view())
     # path('types/create/', views.TypeCreateAPIView.as_view()),
