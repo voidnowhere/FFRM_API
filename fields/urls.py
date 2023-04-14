@@ -7,7 +7,7 @@ urlpatterns = [
     path('add/', views.FieldListCreateAPIView.as_view()),
     path('update/<int:pk>/', views.FieldRetrieveUpdateDestroyAPIView.as_view()),
     path('delete/<int:pk>/', views.FieldRetrieveUpdateDestroyAPIView.as_view()),
-    path('get/<int:pk>/', views.FieldRetrieveUpdateDestroyAPIView.as_view()),
+    path('<int:pk>/', views.FieldRetrieveUpdateDestroyAPIView.as_view()),
     path('fieldtypes/', views.FieldTypeListCreateAPIView.as_view()),
     path('zones/', views.ZoneListCreateAPIView.as_view()),
     path('zones/city=<int:city_id>/', views.ZoneByCityAPIView.as_view()),
