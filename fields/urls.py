@@ -4,7 +4,6 @@ from . import views
 urlpatterns = [
 
     path('', views.FieldListCreateAPIView.as_view()),
-    path('add/', views.FieldListCreateAPIView.as_view()),
     path('<int:pk>/', views.FieldRetrieveUpdateDestroyAPIView.as_view()),
     path('fieldtypes/', views.FieldTypeListCreateAPIView.as_view()),
     path('zones/', views.ZoneListCreateAPIView.as_view()),
