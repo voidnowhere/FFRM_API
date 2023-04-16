@@ -1,7 +1,7 @@
 from django.contrib import admin
 
-from temp_reservations.models import FootBallFieldType, FootBallField, Reservation
+from temp_reservations.models import FieldType, Field, Reservation
 
-admin.site.register(FootBallFieldType)
-admin.site.register(FootBallField)
+admin.site.register(FieldType)
+admin.site.register(Field)
 admin.site.register(Reservation)
