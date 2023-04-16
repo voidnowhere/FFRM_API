@@ -2,8 +2,9 @@ from datetime import datetime
 from decimal import Decimal
 
 import stripe
-from django.db.models import F, Count, Q, Exists, OuterRef, DateField, TimeField, DecimalField, FloatField
-from django.db.models.functions import Cast, Round
+from django.db.models import F, Count, Q, Exists, OuterRef, DateField, TimeField, DecimalField, FloatField, \
+    Subquery
+from django.db.models.functions import Cast, Round, Now
 from pytz import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -71,18 +72,37 @@ class Reservations(ListAPIView):
             price_to_pay=Round(
                 Cast(F('duration_hours'), output_field=DecimalField()) * F('field__type__price_per_hour')
             ),
-            is_paid=Exists(Payment.objects.filter(pk=OuterRef('payment_id'))),
+            is_paid=Q(payment__isnull=False),
+            can_pay=Q(begin_date_time__gte=datetime.now(timezone(TIME_ZONE))) and ~Exists(Subquery(
+                Reservation.objects.exclude(pk=OuterRef('id')).filter(
+                    begin_date_time__lte=OuterRef('end_date_time'),
+                    end_date_time__gte=OuterRef('begin_date_time'),
+                    field_id=OuterRef('field_id'),
+                    payment__isnull=False,
+                )
+            ))
         ).filter(owner=self.request.user).order_by('begin_date_time')
 
 
 @api_view(['GET'])
 @permission_classes([IsPlayer])
 def create_payment(request, pk):
-    reservation = Reservation.objects.filter(pk=pk).first()
+    reservation = Reservation.objects.annotate(
+        can_pay=Q(begin_date_time__gte=datetime.now(timezone(TIME_ZONE))) and ~Exists(Subquery(
+            Reservation.objects.exclude(pk=OuterRef('id')).filter(
+                begin_date_time__lte=OuterRef('end_date_time'),
+                end_date_time__gte=OuterRef('begin_date_time'),
+                field_id=OuterRef('field_id'),
+                payment__isnull=False,
+            )
+        ))
+    ).filter(pk=pk).first()
     if reservation is None:
         raise NotFound
     if reservation.owner_id != request.user.id:
         raise PermissionDenied
+    if not reservation.can_pay:
+        return Response({'message': 'Field already reserved at that time.'}, status=status.HTTP_400_BAD_REQUEST)
     if reservation.payment is not None:
         return Response(status=status.HTTP_403_FORBIDDEN)
     hours = (reservation.end_date_time - reservation.begin_date_time).total_seconds() / 3600
