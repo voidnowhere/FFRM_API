@@ -37,7 +37,8 @@ class ReservationsSerializer(serializers.ModelSerializer):
     end_time = serializers.TimeField()
     price_to_pay = serializers.IntegerField()
     is_paid = serializers.BooleanField()
+    can_pay = serializers.BooleanField()
 
     class Meta:
         model = Reservation
-        fields = ['id', 'date', 'begin_time', 'end_time', 'field', 'price_to_pay', 'is_paid']
+        fields = ['id', 'date', 'begin_time', 'end_time', 'field', 'price_to_pay', 'is_paid', 'can_pay']
