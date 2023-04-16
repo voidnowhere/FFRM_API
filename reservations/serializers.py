@@ -22,10 +22,16 @@ class ReservationListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Reservation
-        fields = ['id', 'field', 'begin_date_time', 'end_date_time', 'is_public']
+        fields = ['id', 'field', 'begin_date_time', 'end_date_time', 'is_public', 'price']
 
 
 class ReservationCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reservation
         fields = ['id', 'field', 'begin_date_time', 'end_date_time']
+
+
+class ReservationUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Reservation
+        fields = ['is_public']
