@@ -84,7 +84,7 @@ def create_payment(request, pk):
     if reservation.owner_id != request.user.id:
         raise PermissionDenied
     if reservation.payment is not None:
-        Response(status=status.HTTP_403_FORBIDDEN)
+        return Response(status=status.HTTP_403_FORBIDDEN)
     hours = (reservation.end_date_time - reservation.begin_date_time).total_seconds() / 3600
     amount_to_pay = Decimal(hours) * reservation.field.type.price_per_hour
     try:
