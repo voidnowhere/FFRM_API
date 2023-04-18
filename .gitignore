@@ -162,3 +162,7 @@ cython_debug/
 
 # VSCode
 .vscode/
+
+# Django migrations
+migrations/
+!migrations/__init__.py

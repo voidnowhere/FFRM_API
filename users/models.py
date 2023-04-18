@@ -27,8 +27,16 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+    PLAYER = 'P'
+    OWNER = 'O'
+    TYPES = [
+        (PLAYER, 'Player'),
+        (OWNER, 'Owner'),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     email = models.EmailField(unique=True)
+    type = models.CharField(max_length=1, choices=TYPES)
     nic = models.CharField(max_length=10, unique=True)
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
@@ -40,7 +48,3 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['nic', 'first_name', 'last_name']
 
     objects = UserManager()
-
-
-class Player(User):
-    pass

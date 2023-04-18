@@ -24,11 +24,11 @@ cd FFRM_API
 python -m venv venv
 ```
 ### Activate it
-- `Command Prompt`
+- `Windows`
 ```bash
-venv\Scripts\activate.bat
+venv\Scripts\activate
 ```
-- `Linux` or `PowerShell`
+- `Linux`
 ```bash
 source venv/Scripts/activate
 ```
@@ -40,6 +40,14 @@ Set-ExecutionPolicy AllSigned
 ### Install `virtualenv requirements`
 ```bash
 pip install -r requirements.txt
+```
+### Create `.env` file using `Command Prompt` and fill it
+```bash
+copy .env.example .env
+```
+### Generate django `SECRET_KEY`
+```bash
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 ```
 ### Make `migrations`
 ```bash
