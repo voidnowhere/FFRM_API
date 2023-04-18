@@ -24,5 +24,5 @@ urlpatterns = [
     path('api/token/blacklist/', TokenBlacklistView.as_view(), name='token_blacklist'),
     path('api/users/', include('users.urls')),
     path('api/temp_reservations/', include('temp_reservations.urls')),
-    path('api/fieldType', include('Field_type.urls'))
+    path('api/field_types/', include('field_types.urls')),
 ]
