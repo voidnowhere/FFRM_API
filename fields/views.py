@@ -1,9 +1,10 @@
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
-from .models import *
-from .serializers import *
+from .models import Field,FieldType,Zone
+from .serializers import FieldSerializer,ZoneSerializer,FieldTypeSerializer,CitySerializer
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView,ListAPIView
+from cities_light.models import City
 
 class ZoneListAPIView(ListAPIView):
     queryset = Zone.objects.all()
@@ -22,6 +23,7 @@ class FieldTypeListCreateAPIView(ListCreateAPIView):
     serializer_class = FieldTypeSerializer
 
 class FieldListCreateAPIView(ListCreateAPIView):
+    permission_classes = [IsOwner]
     serializer_class = FieldSerializer
     queryset = Field.objects.all()
     # def get_queryset(self):
@@ -35,7 +37,7 @@ class FieldRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
 
 
 
-class CityListView(ListCreateAPIView):
+class CityListAPIView(ListAPIView):
     queryset = City.objects.all()
     serializer_class = CitySerializer
 

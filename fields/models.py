@@ -1,6 +1,6 @@
 from django.db import models
 from cities_light.models import City
-
+from users.models import User
 
 class Zone(models.Model):
     name = models.CharField(max_length=100)
@@ -27,8 +27,9 @@ class Field(models.Model):
                   ('naturelle', 'Naturelle'))
     soil_type = models.CharField(max_length=20, choices=SOIL_TYPES)
     zone = models.ForeignKey(Zone, on_delete=models.PROTECT)
-    image = models.ImageField(upload_to='football-fields')
-    
+    image = models.ImageField(upload_to='football-fields',null=True)
+    owner = models.ForeignKey(User, on_delete=models.PROTECT)
+
     def __str__(self):
         return self.name
 
