@@ -8,12 +8,15 @@ from pytz import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import NotFound, PermissionDenied
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
 
 from FFRM_API.settings import STRIPE_SECRET_KEY, TIME_ZONE, STRIPE_WEBHOOK_SIGNING_SECRET
 from temp_reservations.models import Reservation, Payment
-from temp_reservations.serializers import AvailableReservationsSerializer, ReservationsSerializer
+from temp_reservations.permissions import IsReservationOwner
+from temp_reservations.serializers import AvailableReservationsSerializer, ReservationsSerializer, \
+    ReservationPlayersSerializer, PlayerEmailSerializer, UserIdSerializer
+from users.models import User
 from users.permissions import IsPlayer
 
 
@@ -45,7 +48,7 @@ class AvailableReservationsListAPIView(ListAPIView):
 @permission_classes([IsPlayer])
 def join_reservation(request, pk):
     reservation = Reservation.objects.annotate(
-        available_places=F('field__type__max') - Count('players')
+        available_places=F('field__type__max_players') - Count('players')
     ).filter(pk=pk).first()
     if reservation is None:
         raise NotFound
@@ -72,7 +75,7 @@ class ReservationsListAPIView(ListAPIView):
                 Cast(F('duration_hours'), output_field=DecimalField()) * F('field__type__price_per_hour')
             ),
             is_paid=Q(payment__isnull=False),
-            can_pay=Q(begin_date_time__gte=datetime.now(timezone(TIME_ZONE))) and ~Exists(
+            can_pay=Q(begin_date_time__gte=datetime.now(timezone(TIME_ZONE))) and Q(payment__isnull=True) and ~Exists(
                 Reservation.objects.exclude(pk=OuterRef('id')).filter(
                     begin_date_time__lte=OuterRef('end_date_time'),
                     end_date_time__gte=OuterRef('begin_date_time'),
@@ -87,7 +90,7 @@ class ReservationsListAPIView(ListAPIView):
 @permission_classes([IsPlayer])
 def create_payment(request, pk):
     reservation = Reservation.objects.annotate(
-        can_pay=Q(begin_date_time__gte=datetime.now(timezone(TIME_ZONE))) and ~Exists(
+        can_pay=Q(begin_date_time__gte=datetime.now(timezone(TIME_ZONE))) and Q(payment__isnull=True) and ~Exists(
             Reservation.objects.filter(
                 begin_date_time__lte=OuterRef('end_date_time'),
                 end_date_time__gte=OuterRef('begin_date_time'),
@@ -125,7 +128,7 @@ def create_payment(request, pk):
 @permission_classes([IsPlayer])
 def can_pay(request, pk):
     reservation = Reservation.objects.annotate(
-        can_pay=Q(begin_date_time__gte=datetime.now(timezone(TIME_ZONE))) and ~Exists(
+        can_pay=Q(begin_date_time__gte=datetime.now(timezone(TIME_ZONE))) and Q(payment__isnull=True) and ~Exists(
             Reservation.objects.filter(
                 begin_date_time__lte=OuterRef('end_date_time'),
                 end_date_time__gte=OuterRef('begin_date_time'),
@@ -164,7 +167,7 @@ def payment_webhook(request):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         reservation = Reservation.objects.annotate(
-            can_pay=Q(begin_date_time__gte=datetime.now(timezone(TIME_ZONE))) and ~Exists(
+            can_pay=Q(begin_date_time__gte=datetime.now(timezone(TIME_ZONE))) and Q(payment__isnull=True) and ~Exists(
                 Reservation.objects.filter(
                     begin_date_time__lte=OuterRef('end_date_time'),
                     end_date_time__gte=OuterRef('begin_date_time'),
@@ -188,3 +191,62 @@ def payment_webhook(request):
                 )
 
     return Response(status=status.HTTP_200_OK)
+
+
+class ReservationPlayersListAPIView(RetrieveAPIView):
+    serializer_class = ReservationPlayersSerializer
+    permission_classes = [IsPlayer, IsReservationOwner]
+    lookup_field = 'pk'
+
+    def get_queryset(self):
+        return Reservation.objects.all()
+
+
+@api_view(['PATCH'])
+@permission_classes([IsPlayer])
+def invite_player(request, pk):
+    email_serializer = PlayerEmailSerializer(data=request.data)
+    email_serializer.is_valid(raise_exception=True)
+
+    reservation = Reservation.objects.annotate(
+        available_places=F('field__type__max_players') - Count('players')
+    ).filter(pk=pk).first()
+    if not reservation:
+        raise NotFound
+    if reservation.owner_id != request.user.id:
+        raise PermissionDenied
+    if datetime.now(timezone(TIME_ZONE)) > reservation.end_date_time:
+        return Response({'message': "Reservation passed you can't invite player!"}, status=status.HTTP_400_BAD_REQUEST)
+    if reservation.available_places == 0:
+        return Response({'message': "Reservation is full!"}, status=status.HTTP_400_BAD_REQUEST)
+
+    user = User.objects.filter(email=email_serializer.validated_data['email']).first()
+    if not user:
+        return Response({'message': 'Player not found!'}, status=status.HTTP_400_BAD_REQUEST)
+    if user in reservation.players.all():
+        return Response({'message': 'Player already invited!'}, status=status.HTTP_400_BAD_REQUEST)
+
+    reservation.players.add(user)
+    return Response({'message': 'Player invited successfully.'}, status=status.HTTP_200_OK)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsPlayer])
+def remove_player(request, pk):
+    id_serializer = UserIdSerializer(data=request.data)
+    id_serializer.is_valid(raise_exception=True)
+
+    reservation = Reservation.objects.filter(pk=pk).first()
+    if not reservation:
+        raise NotFound
+    if reservation.owner_id != request.user.id:
+        raise PermissionDenied
+    if datetime.now(timezone(TIME_ZONE)) > reservation.end_date_time:
+        return Response({'message': "Reservation passed you can't remove player!"}, status=status.HTTP_400_BAD_REQUEST)
+
+    user = User.objects.filter(pk=id_serializer.validated_data['id']).first()
+    if not user:
+        return Response({'message': 'Player not found!'}, status=status.HTTP_400_BAD_REQUEST)
+
+    reservation.players.remove(user)
+    return Response({'message': 'Player removed successfully.'}, status=status.HTTP_200_OK)
