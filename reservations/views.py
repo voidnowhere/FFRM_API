@@ -10,6 +10,11 @@ from .permissions import IsReservationOwner
 from .serializers import *
 
 
+class FieldsListAPIView(ListAPIView):
+    serializer_class = FieldSerializer
+    queryset = Field.objects.all()
+
+
 class ListCreateReservations(ListCreateAPIView):
     permission_classes = [IsPlayer]
 
@@ -62,7 +67,7 @@ class ListCreateReservations(ListCreateAPIView):
             field=validated_data['field'],
             begin_date_time=validated_data['begin_date_time'],
             end_date_time=validated_data['end_date_time'],
-            price=validated_data['field'].type.price * duration_hours,
+            price=validated_data['field'].type.price,
             owner=self.request.user
         )
         reservation.players.add(self.request.user)
@@ -90,5 +95,15 @@ class ReservationRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
         serializer.save()
         return Response(serializer.data)
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
 
+        # Check if reservation has already begun
+        tz = pytz.timezone('UTC')
+        now = datetime.now(tz)
+        if instance.begin_date_time <= now:
+            return Response({'detail': 'Reservation has already begun and cannot be deleted.'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
