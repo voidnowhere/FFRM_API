@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
-
+from rest_framework.permissions import IsAuthenticated
 from users.permissions import IsOwner
 from .models import Field,FieldType,Zone
 from .serializers import FieldSerializer,ZoneSerializer,FieldTypeSerializer,CitySerializer
@@ -31,7 +31,7 @@ class FieldListCreateAPIView(ListCreateAPIView):
             latitude=validated_data['latitude'],
             longitude=validated_data['longitude'],
             description=validated_data['description'],
-            field_type=validated_data['field_type'],
+            type=validated_data['type'],
             is_active=validated_data['is_active'],
             soil_type=validated_data['soil_type'],
             zone=validated_data['zone'],
@@ -56,6 +56,7 @@ class ZoneListAPIView(ListAPIView):
     serializer_class = ZoneSerializer
     
 class ZoneByCityListAPIView(ListAPIView):
+    permission_classes = [IsAuthenticated]
     serializer_class = ZoneSerializer
 
     def get_queryset(self):

@@ -1,12 +1,13 @@
 from rest_framework import serializers
-from .models import *
+from .models import Field,Zone,FieldType
+from cities_light.models import City
 
 
 class FieldSerializer(serializers.ModelSerializer):
   
     class Meta:
         model = Field
-        fields = ['id','name','address','latitude','longitude','description','field_type','is_active','soil_type','zone']
+        fields = ['id','name','address','latitude','longitude','description','type','is_active','soil_type','zone','owner']
         read_only_fields = ('id',)
 
 

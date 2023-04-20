@@ -21,7 +21,7 @@ class Field(models.Model):
     latitude = models.FloatField()
     longitude = models.FloatField()
     description = models.TextField(max_length=255,)
-    field_type=models.ForeignKey(FieldType, on_delete=models.PROTECT)
+    type=models.ForeignKey(FieldType, on_delete=models.PROTECT)
     is_active = models.BooleanField(default=False)
     SOIL_TYPES = (('synthetique', 'Synthetique'),
                   ('naturelle', 'Naturelle'))
