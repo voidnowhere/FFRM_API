@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'reservations',
     'field_types',
     'temp_reservations',
+    'fields',
+    'cities_light',
 ]
 
 MIDDLEWARE = [
@@ -62,8 +64,7 @@ ROOT_URLCONF = 'FFRM_API.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates']
-        ,
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -148,5 +149,10 @@ SIMPLE_JWT = {
 
 CORS_ALLOW_ALL_ORIGINS = True
 
+
+CITIES_LIGHT_TRANSLATION_LANGUAGES = ['en']
+CITIES_LIGHT_INCLUDE_COUNTRIES = ['MA']
+
 STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY')
 STRIPE_WEBHOOK_SIGNING_SECRET = config('STRIPE_WEBHOOK_SIGNING_SECRET')
+
