@@ -36,6 +36,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Install Python development files
+        run: sudo apt-get install python3-dev
+      
       - uses: actions/checkout@v3
 
       - name: Set up Python version
