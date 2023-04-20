@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from users.models import User
 from .models import Reservation, Field, FieldType
 
 
@@ -42,3 +43,25 @@ class ReservationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reservation
         fields = ['id', 'date', 'begin_time', 'end_time', 'field', 'price_to_pay', 'is_paid', 'can_pay']
+
+
+class UserPlayerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'email']
+
+
+class ReservationPlayersSerializer(serializers.ModelSerializer):
+    players = UserPlayerSerializer(many=True)
+
+    class Meta:
+        model = Reservation
+        fields = ['players']
+
+
+class PlayerEmailSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class UserIdSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
