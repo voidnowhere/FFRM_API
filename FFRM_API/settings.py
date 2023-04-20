@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'users',
     'reservations',
+    'field_types',
+    'temp_reservations',
 ]
 
 MIDDLEWARE = [
@@ -145,3 +147,6 @@ SIMPLE_JWT = {
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
+
+STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY')
+STRIPE_WEBHOOK_SIGNING_SECRET = config('STRIPE_WEBHOOK_SIGNING_SECRET')
