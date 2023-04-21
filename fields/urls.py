@@ -1,17 +1,14 @@
 from django.urls import path
-from . import views
+
+from .views import FieldListCreateAPIView, FieldRetrieveUpdateDestroyAPIView, FieldTypeListCreateAPIView, \
+    ZoneListAPIView, ZoneByCityListAPIView, CityByZoneAPIView, CityListAPIView
 
 urlpatterns = [
-
-    path('', views.FieldListCreateAPIView.as_view()),
-    path('<int:pk>/', views.FieldRetrieveUpdateDestroyAPIView.as_view()),
-
-    path('fieldtypes/', views.FieldTypeListCreateAPIView.as_view()),
-
-    path('zones/', views.ZoneListAPIView.as_view()),
-    path('zones/city=<int:city_id>/', views.ZoneByCityListAPIView.as_view()),
-    path('zones/<int:pk>/city/', views.CityByZoneAPIView.as_view()),
-
-    path('cities/', views.CityListAPIView.as_view()),
-  
+    path('', FieldListCreateAPIView.as_view()),
+    path('<int:pk>/', FieldRetrieveUpdateDestroyAPIView.as_view()),
+    path('fieldtypes/', FieldTypeListCreateAPIView.as_view()),
+    path('zones/', ZoneListAPIView.as_view()),
+    path('zones/city=<int:city_id>/', ZoneByCityListAPIView.as_view()),
+    path('zones/<int:pk>/city/', CityByZoneAPIView.as_view()),
+    path('cities/', CityListAPIView.as_view()),
 ]

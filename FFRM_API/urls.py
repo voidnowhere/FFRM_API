@@ -13,9 +13,12 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
+
+from FFRM_API.settings import IS_PRODUCTION, MEDIA_ROOT, MEDIA_URL
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -24,7 +27,9 @@ urlpatterns = [
     path('api/token/blacklist/', TokenBlacklistView.as_view(), name='token_blacklist'),
     path('api/users/', include('users.urls')),
     path('api/fields/', include('fields.urls')),
-    path('reservations/', include('reservations.urls'))
-    path('api/temp_reservations/', include('temp_reservations.urls')),
+    path('api/reservations/', include('reservations.urls')),
     path('api/field_types/', include('field_types.urls')),
 ]
+
+if not IS_PRODUCTION:
+    urlpatterns += static(MEDIA_URL, document_root=MEDIA_ROOT)
