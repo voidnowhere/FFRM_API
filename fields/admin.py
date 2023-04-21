@@ -1,6 +1,6 @@
 from django.contrib import admin
-from .models import Zone, Field,FieldType
+from .models import Field
+from zones.models import Zone
 
 admin.site.register(Zone)
 admin.site.register(Field)
-admin.site.register(FieldType)

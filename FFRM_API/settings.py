@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     'temp_reservations',
     'fields',
     'cities_light',
+    'cities',
+    'zones',
 ]
 
 MIDDLEWARE = [

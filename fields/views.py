@@ -1,14 +1,10 @@
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.permissions import IsAuthenticated
+from fields.permissions import IsFieldOwner
 from users.permissions import IsOwner
-from .models import Field,FieldType,Zone
-from .serializers import FieldSerializer,ZoneSerializer,FieldTypeSerializer,CitySerializer
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView,ListAPIView
-from cities_light.models import City
-
-
+from .models import Field
+from .serializers import FieldSerializer
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 
 
 class FieldListCreateAPIView(ListCreateAPIView):
@@ -37,31 +33,15 @@ class FieldListCreateAPIView(ListCreateAPIView):
             zone=validated_data['zone'],
             #image=validated_data['image'],
             owner=self.request.user,
-
-        
         )
         return Response({'message': 'Field added successfully'}, status=status.HTTP_200_OK)
 
 class FieldRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsOwner]
+    permission_classes = [IsOwner,IsFieldOwner]
     serializer_class = FieldSerializer
     def get_queryset(self):
         return Field.objects.filter(owner=self.request.user)
 
-class FieldTypeListCreateAPIView(ListCreateAPIView):
-    queryset = FieldType.objects.all()
-    serializer_class = FieldTypeSerializer
-class ZoneListAPIView(ListAPIView):
-    queryset = Zone.objects.all()
-    serializer_class = ZoneSerializer
-    
-class ZoneByCityListAPIView(ListAPIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = ZoneSerializer
-
-    def get_queryset(self):
-        city_id = self.kwargs['city_id']
-        return Zone.objects.filter(city_id=city_id)
 
 
 
@@ -69,16 +49,3 @@ class ZoneByCityListAPIView(ListAPIView):
 
 
 
-
-class CityListAPIView(ListAPIView):
-    queryset = City.objects.all()
-    serializer_class = CitySerializer
-
-
-class CityByZoneAPIView(RetrieveUpdateDestroyAPIView):
-    serializer_class = CitySerializer
-    queryset = City.objects.all()
-
-    def get_object(self):
-        zone_id = self.kwargs['pk']
-        return City.objects.get(zone__id=zone_id)
