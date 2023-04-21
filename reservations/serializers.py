@@ -17,7 +17,7 @@ class FieldSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Field
-        fields = ['id', 'name', 'type', 'latitude', 'longitude']
+        fields = ['id', 'name', 'type', 'image', 'latitude', 'longitude']
 
 
 class ReservationRetrieveUpdateDestroySerializer(serializers.ModelSerializer):
