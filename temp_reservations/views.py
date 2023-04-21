@@ -41,7 +41,7 @@ class AvailableReservationsListAPIView(ListAPIView):
             is_public=True,
             begin_date_time__gt=datetime.now(timezone(TIME_ZONE)),
             available_places_excluding_owner__gt=0,
-        ).order_by('begin_date_time')
+        ).order_by('-begin_date_time')
 
 
 @api_view(['PATCH'])
@@ -75,36 +75,41 @@ class ReservationsListAPIView(ListAPIView):
                 Cast(F('duration_hours'), output_field=DecimalField()) * F('field__type__price_per_hour')
             ),
             is_paid=Q(payment__isnull=False),
-            can_pay=Q(begin_date_time__gte=datetime.now(timezone(TIME_ZONE))) and Q(payment__isnull=True) and ~Exists(
+            is_expired=Q(begin_date_time__lt=datetime.now(timezone(TIME_ZONE))),
+            is_field_reserved=Exists(
                 Reservation.objects.exclude(pk=OuterRef('id')).filter(
                     begin_date_time__lte=OuterRef('end_date_time'),
                     end_date_time__gte=OuterRef('begin_date_time'),
                     field_id=OuterRef('field_id'),
                     payment__isnull=False,
                 )
-            )
-        ).filter(owner=self.request.user).order_by('begin_date_time')
+            ),
+            can_pay=Q(is_paid=False) and Q(is_field_reserved=False) and Q(is_expired=False)
+        ).filter(owner=self.request.user).order_by('-begin_date_time')
 
 
 @api_view(['GET'])
 @permission_classes([IsPlayer])
 def create_payment(request, pk):
     reservation = Reservation.objects.annotate(
-        can_pay=Q(begin_date_time__gte=datetime.now(timezone(TIME_ZONE))) and Q(payment__isnull=True) and ~Exists(
-            Reservation.objects.filter(
+        is_paid=Q(payment__isnull=False),
+        is_expired=Q(begin_date_time__lt=datetime.now(timezone(TIME_ZONE))),
+        is_field_reserved=Exists(
+            Reservation.objects.exclude(pk=OuterRef('id')).filter(
                 begin_date_time__lte=OuterRef('end_date_time'),
                 end_date_time__gte=OuterRef('begin_date_time'),
                 field_id=OuterRef('field_id'),
                 payment__isnull=False,
             )
-        )
+        ),
+        can_pay=Q(is_paid=False) and Q(is_field_reserved=False) and Q(is_expired=False)
     ).filter(pk=pk).first()
     if reservation is None:
         raise NotFound
     if reservation.owner_id != request.user.id:
         raise PermissionDenied
     if not reservation.can_pay:
-        return Response({'message': 'Field already reserved at that time.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': 'Reservation is unavailable.'}, status=status.HTTP_400_BAD_REQUEST)
     hours = (reservation.end_date_time - reservation.begin_date_time).total_seconds() / 3600
     amount_to_pay = Decimal(hours) * reservation.field.type.price_per_hour
     try:
@@ -128,21 +133,24 @@ def create_payment(request, pk):
 @permission_classes([IsPlayer])
 def can_pay(request, pk):
     reservation = Reservation.objects.annotate(
-        can_pay=Q(begin_date_time__gte=datetime.now(timezone(TIME_ZONE))) and Q(payment__isnull=True) and ~Exists(
-            Reservation.objects.filter(
+        is_paid=Q(payment__isnull=False),
+        is_expired=Q(begin_date_time__lt=datetime.now(timezone(TIME_ZONE))),
+        is_field_reserved=Exists(
+            Reservation.objects.exclude(pk=OuterRef('id')).filter(
                 begin_date_time__lte=OuterRef('end_date_time'),
                 end_date_time__gte=OuterRef('begin_date_time'),
                 field_id=OuterRef('field_id'),
                 payment__isnull=False,
             )
-        )
+        ),
+        can_pay=Q(is_paid=False) and Q(is_field_reserved=False) and Q(is_expired=False)
     ).filter(pk=pk).first()
     if reservation is None:
         raise NotFound
     if reservation.owner_id != request.user.id:
         raise PermissionDenied
     if not reservation.can_pay:
-        return Response({'message': 'Field already reserved at that time.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': 'Reservation is unavailable.'}, status=status.HTTP_400_BAD_REQUEST)
     return Response(status=status.HTTP_200_OK)
 
 
@@ -167,14 +175,17 @@ def payment_webhook(request):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         reservation = Reservation.objects.annotate(
-            can_pay=Q(begin_date_time__gte=datetime.now(timezone(TIME_ZONE))) and Q(payment__isnull=True) and ~Exists(
-                Reservation.objects.filter(
+            is_paid=Q(payment__isnull=False),
+            is_expired=Q(begin_date_time__lt=datetime.now(timezone(TIME_ZONE))),
+            is_field_reserved=Exists(
+                Reservation.objects.exclude(pk=OuterRef('id')).filter(
                     begin_date_time__lte=OuterRef('end_date_time'),
                     end_date_time__gte=OuterRef('begin_date_time'),
                     field_id=OuterRef('field_id'),
                     payment__isnull=False,
                 )
-            )
+            ),
+            can_pay=Q(is_paid=False) and Q(is_field_reserved=False) and Q(is_expired=False)
         ).filter(pk=int(payment_intent['metadata']['reservation_id'])).first()
 
         if reservation is not None and not hasattr(reservation, 'payment'):
