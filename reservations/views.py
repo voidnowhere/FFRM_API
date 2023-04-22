@@ -3,7 +3,7 @@ from decimal import Decimal
 
 import stripe
 from django.db.models import F, Count, Q, Exists, OuterRef, DateField, TimeField, DecimalField, FloatField
-from django.db.models.functions import Cast, Round
+from django.db.models.functions import Cast, Round, ExtractHour, ExtractMinute, ExtractSecond
 from pytz import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -35,9 +35,15 @@ class ListCreateReservations(ListCreateAPIView):
             date=Cast('begin_date_time', output_field=DateField()),
             begin_time=Cast('begin_date_time', output_field=TimeField()),
             end_time=Cast('end_date_time', output_field=TimeField()),
-            duration_hours=Cast(F('end_time') - F('begin_time'), output_field=FloatField()) / (3600 * 10 ** 6),
+            date_diff=F('end_date_time') - F('begin_date_time'),
+            duration=(
+                    ExtractHour('date_diff', output_field=FloatField()) +
+                    (ExtractMinute('date_diff', output_field=FloatField()) / 60) +
+                    (ExtractSecond('date_diff', output_field=FloatField()) / 3600)
+            ),
             price_to_pay=Round(
-                Cast(F('duration_hours'), output_field=DecimalField()) * F('price_per_hour')
+                Cast(F('duration'), output_field=DecimalField(max_digits=8, decimal_places=2)) *
+                F('price_per_hour')
             ),
             is_paid=Q(payment__isnull=False),
             is_expired=Q(begin_date_time__lt=datetime.now(timezone(TIME_ZONE))),
