@@ -5,6 +5,8 @@ from field_types.models import FootBallFieldType
 
 
 class Field(models.Model):
+   
+
     name = models.CharField(max_length=100, unique=True)
     address = models.CharField(max_length=255,)
     latitude = models.FloatField()
@@ -16,7 +18,7 @@ class Field(models.Model):
                   ('naturelle', 'Naturelle'))
     soil_type = models.CharField(max_length=20, choices=SOIL_TYPES)
     zone = models.ForeignKey(Zone, on_delete=models.PROTECT)
-    image = models.ImageField(upload_to='football-fields',null=True)
+    image = models.ImageField(upload_to='field_images',null=True)
     owner = models.ForeignKey(User, on_delete=models.PROTECT)
 
     def __str__(self):

@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 from datetime import timedelta
+import os
 from pathlib import Path
 
 from decouple import config
@@ -158,3 +159,12 @@ CITIES_LIGHT_INCLUDE_COUNTRIES = ['MA']
 STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY')
 STRIPE_WEBHOOK_SIGNING_SECRET = config('STRIPE_WEBHOOK_SIGNING_SECRET')
 
+# define your app name and the media directory name
+APP_NAME = 'fields'
+MEDIA_DIR_NAME = 'images'
+
+# define the absolute path to the media directory
+MEDIA_ROOT = os.path.join(BASE_DIR, APP_NAME, 'static', MEDIA_DIR_NAME)
+
+# define the URL used to access the media directory
+MEDIA_URL = f'/{APP_NAME}/static/{MEDIA_DIR_NAME}/'
