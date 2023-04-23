@@ -1,9 +1,8 @@
 from django.urls import path
-from . import views
+
+from .views import FieldListCreateAPIView, FieldRetrieveUpdateDestroyAPIView
 
 urlpatterns = [
-
-    path('', views.FieldListCreateAPIView.as_view()),
-    path('<int:pk>/', views.FieldRetrieveUpdateDestroyAPIView.as_view()),
-  
+    path('', FieldListCreateAPIView.as_view()),
+    path('<int:pk>/', FieldRetrieveUpdateDestroyAPIView.as_view()),
 ]

@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import *
+
+from .views import FootBallFieldTypeListCreate, FootBallFieldTypeRetrieveUpdateDestroy
 
 urlpatterns = [
     path('', FootBallFieldTypeListCreate.as_view(), name='FootBallFieldTypeListCreate'),

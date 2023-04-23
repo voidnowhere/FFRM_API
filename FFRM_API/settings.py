@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
+import os
 from datetime import timedelta
 import os
 from pathlib import Path
@@ -27,7 +28,15 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast=bool)
 
-ALLOWED_HOSTS = []
+IS_PRODUCTION = config('PRODUCTION', cast=bool)
+
+ALLOWED_HOSTS = [config('HOST')]
+
+CSRF_TRUSTED_ORIGINS = [('https://' if IS_PRODUCTION else 'http://') + config('HOST')]
+
+if IS_PRODUCTION:
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
 
 # Application definition
 
@@ -38,21 +47,25 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'cloudinary_storage',
+    'cloudinary',
     'corsheaders',
     'rest_framework_simplejwt.token_blacklist',
     'rest_framework',
     'users',
     'reservations',
     'field_types',
-    'temp_reservations',
     'fields',
     'cities_light',
     'cities',
     'zones',
+    # don't add apps under django_cleanup.apps.CleanupConfig
+    'django_cleanup.apps.CleanupConfig',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -87,6 +100,13 @@ WSGI_APPLICATION = 'FFRM_API.wsgi.application'
 
 DATABASES = {
     'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT'),
+    } if IS_PRODUCTION else {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
@@ -125,6 +145,19 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+if IS_PRODUCTION:
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
+        'API_KEY': config('CLOUDINARY_API_KEY'),
+        'API_SECRET': config('CLOUDINARY_API_SECRET'),
+    }
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -150,21 +183,10 @@ SIMPLE_JWT = {
     "TOKEN_OBTAIN_SERIALIZER": "users.serializers.CustomTokenObtainPairSerializer",
 }
 
-CORS_ALLOW_ALL_ORIGINS = True
-
+CORS_ALLOWED_ORIGINS = [config('CORS_ORIGIN')]
 
 CITIES_LIGHT_TRANSLATION_LANGUAGES = ['en']
 CITIES_LIGHT_INCLUDE_COUNTRIES = ['MA']
 
 STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY')
 STRIPE_WEBHOOK_SIGNING_SECRET = config('STRIPE_WEBHOOK_SIGNING_SECRET')
-
-# define your app name and the media directory name
-APP_NAME = 'fields'
-MEDIA_DIR_NAME = 'images'
-
-# define the absolute path to the media directory
-MEDIA_ROOT = os.path.join(BASE_DIR, APP_NAME, 'static', MEDIA_DIR_NAME)
-
-# define the URL used to access the media directory
-MEDIA_URL = f'/{APP_NAME}/static/{MEDIA_DIR_NAME}/'

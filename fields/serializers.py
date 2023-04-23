@@ -9,4 +9,3 @@ class FieldSerializer(serializers.ModelSerializer):
         model = Field
         fields = ['id','name','address','latitude','longitude','description','type','is_active','soil_type','zone','image']
         read_only_fields = ('id',)
-

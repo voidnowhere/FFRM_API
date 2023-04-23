@@ -1,8 +1,9 @@
-from rest_framework import serializers, status
-from .models import *
+from rest_framework import serializers
+
+from .models import FieldType
 
 
-class FootBallFieldTypeSerializer(serializers.ModelSerializer):
+class FieldTypeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = FootBallFieldType
-        fields = ('id', 'name', 'max', 'priceHour', )
+        model = FieldType
+        fields = ('id', 'name', 'max_players', 'price_per_hour',)

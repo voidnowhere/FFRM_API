@@ -1,9 +1,6 @@
 from django.contrib import admin
 
-from reservations.models import Reservation, Player, Field, TypeField
+from .models import Reservation, Payment
 
 admin.site.register(Reservation)
-admin.site.register(Field)
-admin.site.register(Player)
-admin.site.register(TypeField)
-# Register your models here.
+admin.site.register(Payment)
