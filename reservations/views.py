@@ -324,7 +324,7 @@ def invite_player(request, pk):
     if reservation.available_places == 0:
         return Response({'message': "Reservation is full!"}, status=status.HTTP_400_BAD_REQUEST)
 
-    user = User.objects.filter(email=email_serializer.validated_data['email']).first()
+    user = User.objects.filter(email=email_serializer.validated_data['email'], type=User.PLAYER).first()
     if not user:
         return Response({'message': 'Player not found!'}, status=status.HTTP_400_BAD_REQUEST)
     if user in reservation.players.all():
@@ -348,7 +348,7 @@ def remove_player(request, pk):
     if datetime.now(timezone(TIME_ZONE)) > reservation.end_date_time:
         return Response({'message': "Reservation passed you can't remove player!"}, status=status.HTTP_400_BAD_REQUEST)
 
-    user = User.objects.filter(pk=id_serializer.validated_data['id']).first()
+    user = User.objects.exclude(pk=request.user.id).filter(pk=id_serializer.validated_data['id']).first()
     if not user:
         return Response({'message': 'Player not found!'}, status=status.HTTP_400_BAD_REQUEST)
 
