@@ -17,14 +17,39 @@ from users.models import User
 from users.permissions import IsPlayer
 from .models import Reservation, Payment
 from .permissions import IsReservationOwner
-from .serializers import FieldSerializer, ReservationsListSerializer, ReservationCreateSerializer, \
+from .serializers import ReservationsListSerializer, ReservationCreateSerializer, \
     ReservationRetrieveUpdateDestroySerializer, AvailableReservationsSerializer, ReservationPlayersSerializer, \
-    PlayerEmailSerializer, UserIdSerializer
+    PlayerEmailSerializer, UserIdSerializer, BookingDateTimeSerializer, BookingFieldSerializer
 
 
-class FieldsListAPIView(ListAPIView):
-    serializer_class = FieldSerializer
-    queryset = Field.objects.all()
+@api_view(['POST'])
+def get_available_fields(request):
+    serializer = BookingDateTimeSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    begin_date_time = serializer.validated_data['begin_date_time']
+    end_date_time = serializer.validated_data['end_date_time']
+    date_time_now = datetime.now(timezone(TIME_ZONE))
+
+
+    if begin_date_time.date() == end_date_time.date() and \
+            date_time_now < begin_date_time < end_date_time:
+        fields = Field.objects.annotate(
+            is_booked=Exists(
+                Reservation.objects.filter(
+                    field_id=OuterRef('id'),
+                    begin_date_time__lte=end_date_time,
+                    end_date_time__gte=begin_date_time,
+                    payment__isnull=True
+                )
+            )
+        ).filter(is_booked=False)
+        return Response(BookingFieldSerializer(fields, many=True).data, status=status.HTTP_200_OK)
+    else:
+        return Response({'detail': 'Invalid Reservation date and time.'},
+                        status=status.HTTP_400_BAD_REQUEST)
+
+
+
 
 
 class ListCreateReservations(ListCreateAPIView):
@@ -69,7 +94,7 @@ class ListCreateReservations(ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
         #
-        tz = timezone('UTC')
+        tz = timezone('GMT')
 
         # Check if begin_date_time is after now
         now = datetime.now(tz)
@@ -96,8 +121,6 @@ class ListCreateReservations(ListCreateAPIView):
         elif validated_data['end_date_time'].time() >= time(hour=23, minute=59, second=59):
             return Response({'detail': 'Reservation can not end after midnight of the same day.'},
                             status=status.HTTP_400_BAD_REQUEST)
-
-        duration = validated_data['end_date_time'] - validated_data['begin_date_time']
 
         reservation = Reservation.objects.create(
             field=validated_data['field'],

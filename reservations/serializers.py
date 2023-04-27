@@ -6,6 +6,25 @@ from users.models import User
 from .models import Reservation
 
 
+class BookingDateTimeSerializer(serializers.Serializer):
+    begin_date_time = serializers.DateTimeField()
+    end_date_time = serializers.DateTimeField()
+
+
+class BookingFieldTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FieldType
+        fields = ['name']
+
+
+class BookingFieldSerializer(serializers.ModelSerializer):
+    type = BookingFieldTypeSerializer()
+
+    class Meta:
+        model = Field
+        fields = ['id', 'name', 'type', 'image', 'latitude', 'longitude']
+
+
 class FieldTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = FieldType
