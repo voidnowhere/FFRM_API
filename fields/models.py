@@ -17,7 +17,6 @@ class Field(models.Model):
     soil_type = models.CharField(max_length=20, choices=SOIL_TYPES)
     zone = models.ForeignKey(Zone, on_delete=models.PROTECT)
     image = models.ImageField(upload_to='fields/', null=True, blank=True)
-    owner = models.ForeignKey(User, on_delete=models.PROTECT)
 
     def __str__(self):
         return self.name

@@ -7,12 +7,13 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import status
 from rest_framework.response import Response
 
+
 class FieldListCreateAPIView(ListCreateAPIView):
     permission_classes = [IsOwner]
     serializer_class = FieldSerializer
 
     def get_queryset(self):
-        return Field.objects.filter(owner=self.request.user)
+        return Field.objects.filter(type__in=self.request.user.field_types.all())
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -30,9 +31,8 @@ class FieldListCreateAPIView(ListCreateAPIView):
             soil_type=validated_data['soil_type'],
             zone=validated_data['zone'],
             image=validated_data['image'],
-            owner=self.request.user,
         )
-        return Response(serializer.data,status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class FieldRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
@@ -40,4 +40,4 @@ class FieldRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class = FieldSerializer
 
     def get_queryset(self):
-        return Field.objects.filter(owner=self.request.user)
+        return Field.objects.all()
