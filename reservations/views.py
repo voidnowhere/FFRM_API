@@ -39,7 +39,7 @@ def get_available_fields(request):
                     field_id=OuterRef('id'),
                     begin_date_time__lte=end_date_time,
                     end_date_time__gte=begin_date_time,
-                    payment__isnull=True
+                    payment__isnull=False
                 )
             )
         ).filter(is_booked=False)
