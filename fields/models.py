@@ -1,16 +1,7 @@
-from cities_light.models import City
 from django.db import models
-
-from field_types.models import FieldType
 from users.models import User
-
-
-class Zone(models.Model):
-    name = models.CharField(max_length=100)
-    city = models.ForeignKey(City, on_delete=models.PROTECT)
-
-    def __str__(self):
-        return self.name
+from zones.models import Zone
+from field_types.models import FieldType
 
 
 class Field(models.Model):
@@ -26,7 +17,6 @@ class Field(models.Model):
     soil_type = models.CharField(max_length=20, choices=SOIL_TYPES)
     zone = models.ForeignKey(Zone, on_delete=models.PROTECT)
     image = models.ImageField(upload_to='fields/', null=True, blank=True)
-    owner = models.ForeignKey(User, on_delete=models.PROTECT)
 
     def __str__(self):
         return self.name

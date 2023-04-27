@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 import os
 from datetime import timedelta
+import os
 from pathlib import Path
 
 from decouple import config
@@ -56,6 +57,8 @@ INSTALLED_APPS = [
     'field_types',
     'fields',
     'cities_light',
+    'cities',
+    'zones',
     # don't add apps under django_cleanup.apps.CleanupConfig
     'django_cleanup.apps.CleanupConfig',
 ]
