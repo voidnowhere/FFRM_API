@@ -1,12 +1,12 @@
 from django.urls import path
 
-from .views import ListCreateReservations, FieldsListAPIView, ReservationRetrieveUpdateDestroy, \
+from .views import ListCreateReservations, ReservationRetrieveUpdateDestroy, \
     ReservationPlayersListAPIView, invite_player, remove_player, payment_webhook, create_payment, can_pay, \
-    AvailableReservationsListAPIView, join_reservation
+    AvailableReservationsListAPIView, join_reservation, get_available_fields
 
 urlpatterns = [
     path('', ListCreateReservations.as_view()),
-    path('fields/', FieldsListAPIView.as_view()),
+    path('fields/', get_available_fields),
     path('<int:id>/', ReservationRetrieveUpdateDestroy.as_view()),
     path('<int:pk>/players/', ReservationPlayersListAPIView.as_view()),
     path('<int:pk>/players/invite/', invite_player),
