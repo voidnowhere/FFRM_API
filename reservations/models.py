@@ -15,12 +15,3 @@ class Reservation(models.Model):
 
     def __str__(self):
         return f'{self.field} {self.field.type} {self.begin_date_time} {self.end_date_time}'
-
-
-class Payment(models.Model):
-    pid = models.CharField(max_length=255)
-    created = models.DateTimeField()
-    reservation = models.OneToOneField(Reservation, on_delete=models.PROTECT, related_name='payment')
-
-    def __str__(self):
-        return f'{self.id} {self.created}'

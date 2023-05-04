@@ -1,7 +1,5 @@
 from datetime import datetime, time
-from decimal import Decimal
 
-import stripe
 from django.db.models import F, Count, Q, Exists, OuterRef, DateField, TimeField, DecimalField, FloatField
 from django.db.models.functions import Cast, Round, ExtractHour, ExtractMinute, ExtractSecond
 from pytz import timezone
@@ -11,11 +9,11 @@ from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 
-from FFRM_API.settings import STRIPE_SECRET_KEY, TIME_ZONE, STRIPE_WEBHOOK_SIGNING_SECRET
+from FFRM_API.settings import TIME_ZONE
 from fields.models import Field
 from users.models import User
 from users.permissions import IsPlayer
-from .models import Reservation, Payment
+from .models import Reservation
 from .permissions import IsReservationOwner
 from .serializers import ReservationsListSerializer, ReservationCreateSerializer, \
     ReservationRetrieveUpdateDestroySerializer, AvailableReservationsSerializer, ReservationPlayersSerializer, \
@@ -29,7 +27,6 @@ def get_available_fields(request):
     begin_date_time = serializer.validated_data['begin_date_time']
     end_date_time = serializer.validated_data['end_date_time']
     date_time_now = datetime.now(timezone(TIME_ZONE))
-
 
     if begin_date_time.date() == end_date_time.date() and \
             date_time_now < begin_date_time < end_date_time:
@@ -49,9 +46,6 @@ def get_available_fields(request):
                         status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
-
 class ListCreateReservations(ListCreateAPIView):
     permission_classes = [IsPlayer]
 
@@ -61,15 +55,13 @@ class ListCreateReservations(ListCreateAPIView):
             begin_time=Cast('begin_date_time', output_field=TimeField()),
             end_time=Cast('end_date_time', output_field=TimeField()),
             date_diff=F('end_date_time') - F('begin_date_time'),
-            duration=(
-                    ExtractHour('date_diff', output_field=FloatField()) +
-                    (ExtractMinute('date_diff', output_field=FloatField()) / 60) +
-                    (ExtractSecond('date_diff', output_field=FloatField()) / 3600)
+            total_seconds=Cast(
+                (ExtractHour('date_diff', output_field=FloatField()) * 3600) +
+                (ExtractMinute('date_diff', output_field=FloatField()) * 60) +
+                ExtractSecond('date_diff', output_field=FloatField()),
+                output_field=DecimalField(max_digits=8, decimal_places=2)
             ),
-            price_to_pay=Round(
-                Cast(F('duration'), output_field=DecimalField(max_digits=8, decimal_places=2)) *
-                F('price_per_hour')
-            ),
+            price_to_pay=Round(F('total_seconds') * (F('price_per_hour') / 3600)),
             is_paid=Q(payment__isnull=False),
             is_expired=Q(begin_date_time__lt=datetime.now(timezone(TIME_ZONE))),
             is_field_reserved=Exists(
@@ -202,122 +194,6 @@ def join_reservation(request, pk):
         return Response({'message': 'You already joined this reservation.'}, status=status.HTTP_200_OK)
     reservation.players.add(user)
     return Response({'message': 'Joined reservation successfully.'}, status=status.HTTP_200_OK)
-
-
-@api_view(['GET'])
-@permission_classes([IsPlayer])
-def create_payment(request, pk):
-    reservation = Reservation.objects.annotate(
-        is_paid=Q(payment__isnull=False),
-        is_expired=Q(begin_date_time__lt=datetime.now(timezone(TIME_ZONE))),
-        is_field_reserved=Exists(
-            Reservation.objects.exclude(pk=OuterRef('id')).filter(
-                begin_date_time__lte=OuterRef('end_date_time'),
-                end_date_time__gte=OuterRef('begin_date_time'),
-                field_id=OuterRef('field_id'),
-                payment__isnull=False,
-            )
-        ),
-        can_pay=Q(is_paid=False) and Q(is_field_reserved=False) and Q(is_expired=False)
-    ).filter(pk=pk).first()
-    if reservation is None:
-        raise NotFound
-    if reservation.owner_id != request.user.id:
-        raise PermissionDenied
-    if not reservation.can_pay:
-        return Response({'message': 'Reservation is unavailable.'}, status=status.HTTP_400_BAD_REQUEST)
-    hours = (reservation.end_date_time - reservation.begin_date_time).total_seconds() / 3600
-    amount_to_pay = Decimal(hours) * reservation.field.type.price_per_hour
-    try:
-        intent = stripe.PaymentIntent.create(
-            api_key=STRIPE_SECRET_KEY,
-            amount=round(amount_to_pay) * 100,
-            currency='mad',
-            automatic_payment_methods={
-                'enabled': True,
-            },
-            metadata={
-                "reservation_id": reservation.id
-            },
-        )
-        return Response({'client_secret': intent['client_secret']}, status=status.HTTP_200_OK)
-    except Exception as e:
-        return Response({'message': 'Payment failed.'}, status=status.HTTP_403_FORBIDDEN)
-
-
-@api_view(['GET'])
-@permission_classes([IsPlayer])
-def can_pay(request, pk):
-    reservation = Reservation.objects.annotate(
-        is_paid=Q(payment__isnull=False),
-        is_expired=Q(begin_date_time__lt=datetime.now(timezone(TIME_ZONE))),
-        is_field_reserved=Exists(
-            Reservation.objects.exclude(pk=OuterRef('id')).filter(
-                begin_date_time__lte=OuterRef('end_date_time'),
-                end_date_time__gte=OuterRef('begin_date_time'),
-                field_id=OuterRef('field_id'),
-                payment__isnull=False,
-            )
-        ),
-        can_pay=Q(is_paid=False) and Q(is_field_reserved=False) and Q(is_expired=False)
-    ).filter(pk=pk).first()
-    if reservation is None:
-        raise NotFound
-    if reservation.owner_id != request.user.id:
-        raise PermissionDenied
-    if not reservation.can_pay:
-        return Response({'message': 'Reservation is unavailable.'}, status=status.HTTP_400_BAD_REQUEST)
-    return Response(status=status.HTTP_200_OK)
-
-
-@api_view(['POST'])
-def payment_webhook(request):
-    endpoint_secret = STRIPE_WEBHOOK_SIGNING_SECRET
-    event = None
-    payload = request.body
-
-    if endpoint_secret:
-        sig_header = request.headers.get('stripe-signature')
-        try:
-            event = stripe.Webhook.construct_event(
-                payload, sig_header, endpoint_secret
-            )
-        except stripe.error.SignatureVerificationError as e:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-    if event and event['type'] == 'payment_intent.succeeded':
-        payment_intent = event['data']['object']  # contains a stripe.PaymentIntent
-        if not payment_intent['metadata'].get('reservation_id', None):
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        reservation = Reservation.objects.annotate(
-            is_paid=Q(payment__isnull=False),
-            is_expired=Q(begin_date_time__lt=datetime.now(timezone(TIME_ZONE))),
-            is_field_reserved=Exists(
-                Reservation.objects.exclude(pk=OuterRef('id')).filter(
-                    begin_date_time__lte=OuterRef('end_date_time'),
-                    end_date_time__gte=OuterRef('begin_date_time'),
-                    field_id=OuterRef('field_id'),
-                    payment__isnull=False,
-                )
-            ),
-            can_pay=Q(is_paid=False) and Q(is_field_reserved=False) and Q(is_expired=False)
-        ).filter(pk=int(payment_intent['metadata']['reservation_id'])).first()
-
-        if reservation is not None and not hasattr(reservation, 'payment'):
-            if not reservation.can_pay:
-                stripe.Refund.create(
-                    api_key=STRIPE_SECRET_KEY,
-                    payment_intent=payment_intent['id'],
-                )
-            else:
-                Payment.objects.create(
-                    pid=payment_intent['id'],
-                    created=datetime.fromtimestamp(payment_intent['created'], timezone(TIME_ZONE)),
-                    reservation=reservation
-                )
-
-    return Response(status=status.HTTP_200_OK)
 
 
 class ReservationPlayersListAPIView(RetrieveAPIView):
