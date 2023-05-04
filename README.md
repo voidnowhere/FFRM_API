@@ -61,6 +61,10 @@ python manage.py migrate
 ```bash
 python manage.py createsuperuser
 ```
+### Populate cities
+```bash
+python manage.py cities_light --force-all
+```
 ### Run server
 ```bash
 python manage.py runserver

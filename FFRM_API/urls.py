@@ -17,7 +17,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
-from django.conf.urls.static import static  
+
 from FFRM_API.settings import IS_PRODUCTION, MEDIA_ROOT, MEDIA_URL
 
 urlpatterns = [
@@ -31,6 +31,7 @@ urlpatterns = [
     path('api/field_types/', include('field_types.urls')),
     path('api/zones/', include('zones.urls')),
     path('api/cities/', include('cities.urls')),
+    path('api/payments/', include('payments.urls')),
 ]
 
 if not IS_PRODUCTION:
