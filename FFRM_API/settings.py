@@ -13,7 +13,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
-from decouple import config
+from decouple import config, Csv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,9 +29,9 @@ DEBUG = config('DEBUG', cast=bool)
 
 IS_PRODUCTION = config('PRODUCTION', cast=bool)
 
-ALLOWED_HOSTS = [config('HOST')]
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
 
-CSRF_TRUSTED_ORIGINS = [('https://' if IS_PRODUCTION else 'http://') + config('HOST')]
+CSRF_TRUSTED_ORIGINS = [('https://' if IS_PRODUCTION else 'http://') + config('ALLOWED_HOSTS', cast=Csv())[0]]
 
 if IS_PRODUCTION:
     CSRF_COOKIE_SECURE = True
@@ -57,6 +57,9 @@ INSTALLED_APPS = [
     'fields',
     'bookings',
     'cities_light',
+    'cities',
+    'zones',
+    'payments',
     # don't add apps under django_cleanup.apps.CleanupConfig
     'django_cleanup.apps.CleanupConfig',
 ]
