@@ -28,6 +28,7 @@ urlpatterns = [
     path('api/users/', include('users.urls')),
     path('api/fields/', include('fields.urls')),
     path('api/reservations/', include('reservations.urls')),
+    path('api/bookings/', include('bookings.urls')),
     path('api/field_types/', include('field_types.urls')),
 ]
 

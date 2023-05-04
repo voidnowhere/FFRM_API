@@ -22,7 +22,7 @@ class ZoneSerializer(serializers.ModelSerializer):
 class FieldTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = FieldType
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'max_players']
         read_only_fields = ('id',)
 
 

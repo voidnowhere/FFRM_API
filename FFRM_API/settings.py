@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'reservations',
     'field_types',
     'fields',
+    'bookings',
     'cities_light',
     # don't add apps under django_cleanup.apps.CleanupConfig
     'django_cleanup.apps.CleanupConfig',

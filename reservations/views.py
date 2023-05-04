@@ -22,35 +22,6 @@ from .serializers import ReservationsListSerializer, ReservationCreateSerializer
     PlayerEmailSerializer, UserIdSerializer, BookingDateTimeSerializer, BookingFieldSerializer
 
 
-@api_view(['POST'])
-def get_available_fields(request):
-    serializer = BookingDateTimeSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    begin_date_time = serializer.validated_data['begin_date_time']
-    end_date_time = serializer.validated_data['end_date_time']
-    date_time_now = datetime.now(timezone(TIME_ZONE))
-
-
-    if begin_date_time.date() == end_date_time.date() and \
-            date_time_now < begin_date_time < end_date_time:
-        fields = Field.objects.annotate(
-            is_booked=Exists(
-                Reservation.objects.filter(
-                    field_id=OuterRef('id'),
-                    begin_date_time__lte=end_date_time,
-                    end_date_time__gte=begin_date_time,
-                    payment__isnull=False
-                )
-            )
-        ).filter(is_booked=False)
-        return Response(BookingFieldSerializer(fields, many=True).data, status=status.HTTP_200_OK)
-    else:
-        return Response({'detail': 'Invalid Reservation date and time.'},
-                        status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
 
 class ListCreateReservations(ListCreateAPIView):
     permission_classes = [IsPlayer]
@@ -134,33 +105,36 @@ class ListCreateReservations(ListCreateAPIView):
         return Response(self.get_serializer(reservation).data)
 
 
-class ReservationRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsPlayer, IsReservationOwner]
-    serializer_class = ReservationRetrieveUpdateDestroySerializer
-    lookup_field = 'id'
+@api_view(['PATCH'])
+@permission_classes([IsPlayer, IsReservationOwner])
+def update_public(request, id):
+    try:
+        reservation = Reservation.objects.get(id=id, owner=request.user)
+    except Reservation.DoesNotExist:
+        return Response({'detail': 'Reservation not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-    def get_queryset(self):
-        return Reservation.objects.filter(owner=self.request.user)
+    serializer = ReservationRetrieveUpdateDestroySerializer(reservation, data=request.data, partial=True)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+    return Response(serializer.data)
 
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
+@api_view(['DELETE'])
+@permission_classes([IsPlayer, IsReservationOwner])
+def delete_reservation(request, id):
+    try:
+        reservation = Reservation.objects.get(id=id, owner=request.user)
+    except Reservation.DoesNotExist:
+        return Response({'detail': 'Reservation not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
+    # Check if reservation has already begun
+    tz = timezone('UTC')
+    now = datetime.now(tz)
+    if reservation.begin_date_time <= now:
+        return Response({'detail': 'Reservation has already begun and cannot be deleted.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Check if reservation has already begun
-        tz = timezone('UTC')
-        now = datetime.now(tz)
-        if instance.begin_date_time <= now:
-            return Response({'detail': 'Reservation has already begun and cannot be deleted.'},
-                            status=status.HTTP_400_BAD_REQUEST)
+    reservation.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class AvailableReservationsListAPIView(ListAPIView):
