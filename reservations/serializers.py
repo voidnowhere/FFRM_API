@@ -1,10 +1,11 @@
+from _decimal import Decimal
 from rest_framework import serializers
 
 from field_types.models import FieldType
 from fields.models import Field
 from users.models import User
 from .models import Reservation
-
+from fields.serializers import FieldSerializer as FieldSerializer2
 
 class BookingDateTimeSerializer(serializers.Serializer):
     begin_date_time = serializers.DateTimeField()
@@ -120,3 +121,40 @@ class PlayerEmailSerializer(serializers.Serializer):
 
 class UserIdSerializer(serializers.Serializer):
     id = serializers.UUIDField()
+
+
+class FieldOwnerReservationSerializer(serializers.ModelSerializer):
+    owner = UserPlayerSerializer()
+    total_amount = serializers.SerializerMethodField()
+    date = serializers.SerializerMethodField()
+    begin_time = serializers.SerializerMethodField()
+    end_time = serializers.SerializerMethodField()
+    field = FieldSerializer2()
+    players_count = serializers.SerializerMethodField()
+
+    def get_date(self, obj):
+        return obj.begin_date_time.date()
+
+    def get_begin_time(self, obj):
+        return obj.begin_date_time.time()
+
+    def get_end_time(self, obj):
+        return obj.end_date_time.time()
+
+    def get_owner(self, obj):
+        return obj.owner
+
+    def get_total_amount(self, obj):
+        field_type_price = obj.field.type.price_per_hour
+        duration = Decimal((obj.end_date_time - obj.begin_date_time).total_seconds()) / Decimal(3600)
+        total_amount = field_type_price * duration
+        return total_amount
+
+    def get_players_count(self, obj):
+        return obj.players.count()
+
+    class Meta:
+        model = Reservation
+        fields = ['id', 'date', 'begin_time', 'end_time',
+                  'total_amount', 'field',
+                  'owner', 'players', 'players_count']
