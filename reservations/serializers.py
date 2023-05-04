@@ -14,7 +14,7 @@ class BookingDateTimeSerializer(serializers.Serializer):
 class BookingFieldTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = FieldType
-        fields = ['name']
+        fields = ['name', 'max_players', 'price_per_hour']
 
 
 class BookingFieldSerializer(serializers.ModelSerializer):

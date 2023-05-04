@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'reservations',
     'field_types',
     'fields',
+    'bookings',
     'cities_light',
     'cities',
     'zones',
