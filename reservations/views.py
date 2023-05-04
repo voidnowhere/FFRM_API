@@ -6,7 +6,7 @@ from pytz import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import NotFound, PermissionDenied
-from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIView
 from rest_framework.response import Response
 
 from FFRM_API.settings import TIME_ZONE
@@ -16,7 +16,7 @@ from .models import Reservation
 from .permissions import IsReservationOwner
 from .serializers import ReservationsListSerializer, ReservationCreateSerializer, \
     ReservationRetrieveUpdateDestroySerializer, AvailableReservationsSerializer, ReservationPlayersSerializer, \
-    PlayerEmailSerializer, UserIdSerializer, BookingDateTimeSerializer, BookingFieldSerializer
+    PlayerEmailSerializer, UserIdSerializer
 
 
 class ListCreateReservations(ListCreateAPIView):
@@ -70,7 +70,8 @@ class ListCreateReservations(ListCreateAPIView):
         if Reservation.objects.filter(
                 field=validated_data['field'],
                 begin_date_time__lte=validated_data['end_date_time'],
-                end_date_time__gte=validated_data['begin_date_time']
+                end_date_time__gte=validated_data['begin_date_time'],
+                payment__isnull=False,
         ):
             return Response({'detail': 'Reservation is not available within the selected time range.'},
                             status=status.HTTP_400_BAD_REQUEST)

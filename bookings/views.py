@@ -19,11 +19,13 @@ from .serializers import BookingDateTimeSerializer, BookingFieldSerializer
 def get_available_fields(request):
     serializer = BookingDateTimeSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
+
     begin_date_time = serializer.validated_data['begin_date_time']
     end_date_time = serializer.validated_data['end_date_time']
     latitude = serializer.validated_data['latitude']
     longitude = serializer.validated_data['longitude']
     date_time_now = datetime.now(timezone(TIME_ZONE))
+
     if date_time_now < begin_date_time < end_date_time:
         if latitude and longitude:
             fields = Field.objects.annotate(
@@ -44,7 +46,8 @@ def get_available_fields(request):
                 c=2 * ATan2(Sqrt(F('a')), Sqrt(1 - F('a'))),
                 distance=6371 * F('c'),
             ).filter(is_booked=False, is_active=True).order_by('distance')
-            return Response(BookingFieldSerializer(fields, many=True).data, status=status.HTTP_200_OK)
+            return Response(BookingFieldSerializer(fields, many=True, context={'request': request}).data,
+                            status=status.HTTP_200_OK)
 
         else:
             fields = Field.objects.annotate(
@@ -57,7 +60,8 @@ def get_available_fields(request):
                     )
                 )
             ).filter(is_booked=False, is_active=True)
-            return Response(BookingFieldSerializer(fields, many=True).data, status=status.HTTP_200_OK)
+            return Response(BookingFieldSerializer(fields, many=True, context={'request': request}).data,
+                            status=status.HTTP_200_OK)
 
     else:
         return Response({'detail': 'Invalid Reservation date and time.'},
