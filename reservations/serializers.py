@@ -5,8 +5,7 @@ from field_types.models import FieldType
 from fields.models import Field
 from users.models import User
 from .models import Reservation
-from fields.serializers import FieldSerializer as FieldSerializer2
-
+from fields.serializers import NestedFieldSerializer
 class BookingDateTimeSerializer(serializers.Serializer):
     begin_date_time = serializers.DateTimeField()
     end_date_time = serializers.DateTimeField()
@@ -129,7 +128,7 @@ class FieldOwnerReservationSerializer(serializers.ModelSerializer):
     date = serializers.SerializerMethodField()
     begin_time = serializers.SerializerMethodField()
     end_time = serializers.SerializerMethodField()
-    field = FieldSerializer2()
+    field = NestedFieldSerializer()
     players_count = serializers.SerializerMethodField()
 
     def get_date(self, obj):
