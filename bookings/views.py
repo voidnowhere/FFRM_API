@@ -22,8 +22,8 @@ def get_available_fields(request):
 
     begin_date_time = serializer.validated_data['begin_date_time']
     end_date_time = serializer.validated_data['end_date_time']
-    latitude = serializer.validated_data['latitude']
-    longitude = serializer.validated_data['longitude']
+    latitude = serializer.validated_data.get('latitude', None)
+    longitude = serializer.validated_data.get('longitude', None)
     date_time_now = datetime.now(timezone(TIME_ZONE))
 
     if date_time_now < begin_date_time < end_date_time:
