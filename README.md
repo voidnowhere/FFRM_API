@@ -3,6 +3,12 @@ Football Field Reservation Management API
 
 <hr>
 
+## `Architecture`
+
+![image](https://github.com/voidnowhere/FFRM_API/assets/79842485/1656bd5a-baf0-4b57-ae10-9c39a3c15298)
+
+<hr>
+
 ## `Clone repository`
 ```bash
 git clone https://github.com/voidnowhere/FFRM_API.git
