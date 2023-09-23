@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  api:
+    container_name: ffrm-api
+    build:
+      context: ./docker/python
+      dockerfile: Dockerfile
+      args:
+        USER: ${USER}
+        UID: ${UID}
+    ports:
+      - '${APP_PORT}:8000'
+    working_dir: /app
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+
+  db:
+    container_name: ffrm-db
+    image: postgres:16
+    volumes:
+      - ./docker/postgresql_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ffrm
+
+  pgadmin:
+    container_name: ffrm-pgadmin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: root@root.dev
+      PGADMIN_DEFAULT_PASSWORD: password
+    ports:
+      - '${PGADMIN_PORT}:80'
+    depends_on:
+      - db
